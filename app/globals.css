@@ -416,3 +416,48 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---- product shell motion (appended) ----
+   Shared by the authenticated app shell and its screens. Ease-out only, no
+   overshoot. The reduced-motion rule above clamps all of these to a final frame. */
+
+/* the mobile navigation drawer sliding in from the left edge */
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.anim-drawer {
+  animation: drawer-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* a screen settling into place on mount, slightly softer than anim-rise */
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.anim-view {
+  animation: view-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@layer utilities {
+  /* a calm hover lift for cards and rows, ease-out, no bounce */
+  .hover-lift {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.25s ease,
+      background-color 0.25s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}

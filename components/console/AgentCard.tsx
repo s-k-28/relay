@@ -37,7 +37,7 @@ export function AgentCard({
       type="button"
       onClick={() => onSelect(member.id)}
       aria-pressed={selected}
-      className={`group flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
+      className={`hover-lift group flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left ${
         selected
           ? "border-signal/55 bg-signal-deep/40"
           : "border-line bg-card hover:border-line-strong hover:bg-raised"
