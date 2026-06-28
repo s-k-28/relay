@@ -212,6 +212,34 @@ export async function notifyHuman(key: string, summary: string): Promise<boolean
   }
 }
 
+export interface ShareLink {
+  url: string;
+  agentUrl: string;
+}
+
+// Create a permissioned public agent link for a member so people outside Relay
+// can reach their agent on read only scope. Returns null if Aicoo declines.
+export async function createShareLink(
+  key: string,
+  label: string,
+): Promise<ShareLink | null> {
+  try {
+    const data = await aicoo<{ shareLink?: { url?: string; agentUrl?: string } }>(
+      key,
+      "/share/create",
+      {
+        method: "POST",
+        body: JSON.stringify({ scope: "all", access: "read", label }),
+      },
+    );
+    const link = data?.shareLink;
+    if (!link?.url) return null;
+    return { url: link.url, agentUrl: link.agentUrl ?? link.url };
+  } catch {
+    return null;
+  }
+}
+
 // Write a resolved question and answer back into the member's Relay folder so
 // the next identical question is instant. Non critical, fails soft.
 export async function accumulate(

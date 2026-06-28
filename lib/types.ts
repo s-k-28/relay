@@ -97,6 +97,12 @@ export interface EscalateResponse {
   notified: boolean;
 }
 
+// POST /api/share (additive Aicoo surface, not part of the original six)
+export interface ShareResponse {
+  shareUrl: string;
+  agentUrl: string;
+}
+
 // GET /api/stats
 export interface StatsResponse {
   totalRequests: number;
