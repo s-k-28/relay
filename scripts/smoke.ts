@@ -72,8 +72,8 @@ async function main() {
   ok("network -> members listed", n.status === 200 && Array.isArray(n.body?.members));
   ok("network never leaks any key", JSON.stringify(n.body || {}).indexOf(KEY) === -1);
 
-  // 3. relay a real question to our own agent (exercises Aicoo POST /chat)
-  let answered = false;
+  // 3. relay a question our seeded context can answer (exercises Aicoo POST /chat)
+  let answeredReqId = "";
   if (meId) {
     const r = await call("/api/relay", {
       method: "POST",
@@ -82,27 +82,96 @@ async function main() {
         question: "What is the v2 launch date and who owns it?",
       }),
     });
-    answered =
-      r.status === 200 &&
-      typeof r.body?.answer === "string" &&
-      r.body.answer.length > 0;
     ok(
       "relay -> grounded answer from the agent",
-      answered,
-      `status ${r.status}, len ${r.body?.answer?.length ?? 0}`,
+      r.status === 200 &&
+        r.body?.status === "answered" &&
+        typeof r.body?.answer === "string" &&
+        r.body.answer.length > 0,
+      `status ${r.status}/${r.body?.status}, len ${r.body?.answer?.length ?? 0}`,
     );
+    if (r.body?.requestId) answeredReqId = r.body.requestId;
   } else {
     ok("relay (skipped, no member id)", false);
   }
 
-  // 4. stats
+  // 4. relay a question the context cannot answer (the agent emits ESCALATE)
+  if (meId) {
+    const r = await call("/api/relay", {
+      method: "POST",
+      body: JSON.stringify({
+        toMemberId: meId,
+        question: "What is the CEO's personal home address?",
+      }),
+    });
+    ok(
+      "relay -> escalates when the answer is absent or sensitive",
+      r.status === 200 && r.body?.status === "escalated",
+      `status ${r.status}/${r.body?.status}`,
+    );
+  }
+
+  // 5. escalate endpoint pings the human via Aicoo send_message_to_human
+  if (answeredReqId) {
+    const e = await call("/api/escalate", {
+      method: "POST",
+      body: JSON.stringify({ requestId: answeredReqId }),
+    });
+    ok(
+      "escalate -> ok + status escalated",
+      e.status === 200 && e.body?.ok === true && e.body?.status === "escalated",
+      `status ${e.status}`,
+    );
+    ok(
+      "escalate -> human notified via Aicoo send_message_to_human",
+      e.body?.notified === true,
+      `notified ${e.body?.notified}`,
+    );
+  } else {
+    ok("escalate (skipped, no request id)", false);
+  }
+
+  // 6. thread view for the request
+  if (answeredReqId) {
+    const t = await call(`/api/thread?id=${answeredReqId}`);
+    ok(
+      "thread -> request + messages",
+      t.status === 200 && !!t.body?.request && Array.isArray(t.body?.messages),
+      `status ${t.status}, msgs ${t.body?.messages?.length ?? 0}`,
+    );
+  }
+
+  // 7. share creates a permissioned agent link via Aicoo share/create
+  const sh = await call("/api/share", { method: "POST" });
+  ok(
+    "share -> permissioned agent link",
+    sh.status === 200 && typeof sh.body?.shareUrl === "string" && sh.body.shareUrl.length > 0,
+    `status ${sh.status}`,
+  );
+  ok("share never leaks the key", JSON.stringify(sh.body || {}).indexOf(KEY) === -1);
+
+  // 8. stats
   const s = await call("/api/stats");
   ok("stats -> totals", s.status === 200 && typeof s.body?.totalRequests === "number");
 
+  // 9. proof endpoint lists the wired Aicoo endpoints and live counts
+  const p = await call("/api/proof");
+  ok(
+    "proof -> lists Aicoo endpoints + live counts",
+    p.status === 200 &&
+      Array.isArray(p.body?.aicooEndpointsUsed) &&
+      p.body.aicooEndpointsUsed.length >= 5 &&
+      typeof p.body?.live?.requestsRelayed === "number",
+    `status ${p.status}, endpoints ${p.body?.aicooEndpointsUsed?.length ?? 0}`,
+  );
+
   console.log("");
   console.log("Aicoo endpoints exercised by this run:");
-  console.log("  POST /api/v1/init   via connect (key validation)");
-  console.log("  POST /api/v1/chat   via relay (grounded answer)");
+  console.log("  POST /api/v1/init                          via connect (key validation)");
+  console.log("  POST /api/v1/chat                          via relay (grounded answer + escalate)");
+  console.log("  POST /api/v1/tools send_message_to_human   via escalate (human ping)");
+  console.log("  POST /api/v1/accumulate                    via relay (resolved write-back)");
+  console.log("  POST /api/v1/share/create                  via share (permissioned link)");
   console.log("");
   console.log(`Result: ${pass} passed, ${fail} failed.`);
   process.exit(fail === 0 ? 0 : 1);
