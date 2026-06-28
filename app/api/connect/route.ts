@@ -5,6 +5,7 @@ import type { ConnectBody } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // POST /api/connect { name, role?, aicooKey }
 // Validates the key against Aicoo, stores the member, sets the identity cookie.

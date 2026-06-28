@@ -4,8 +4,10 @@
 
 const BASE = "https://www.aicoo.io/api/v1";
 
-// Agent calls can take a while. Cap them so a slow agent does not hang a route.
-const TIMEOUT_MS = 25000;
+// Agent calls can take a while. Aicoo's runtime routinely needs 25 to 40
+// seconds to compose a grounded answer, so cap generously to avoid aborting a
+// real answer. Route handlers set maxDuration so the function has room to wait.
+const TIMEOUT_MS = 45000;
 
 export class AicooError extends Error {
   status: number;
@@ -330,12 +332,13 @@ export async function rankMembers(
       body: JSON.stringify({ message, stream: false }),
     });
     const text = typeof data === "string" ? parseNdjson(data) || data : extractText(data);
-    const ranked: string[] = [];
-    // ids are uuids, so split on anything that is not a hex digit or hyphen.
-    for (const piece of text.split(/[^a-f0-9-]+/i)) {
-      const hit = members.find((m) => m.id === piece);
-      if (hit && !ranked.includes(hit.id)) ranked.push(hit.id);
-    }
+    // Order by where each member id first appears in the reply. Robust to any
+    // id format, no assumptions about charset.
+    const ranked = members
+      .map((m) => ({ id: m.id, idx: text.indexOf(m.id) }))
+      .filter((x) => x.idx !== -1)
+      .sort((a, b) => a.idx - b.idx)
+      .map((x) => x.id);
     // Append any members the router did not mention, preserving original order.
     for (const id of order) if (!ranked.includes(id)) ranked.push(id);
     return ranked;

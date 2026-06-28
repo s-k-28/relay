@@ -5,6 +5,7 @@ import type { RelayBody, RouteHop } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // How many agents to try before falling back to a human.
 const MAX_HOPS = 3;
