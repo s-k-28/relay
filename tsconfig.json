@@ -30,5 +30,8 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  // scripts/ holds ops and demo tools run with tsx (seed, smoke), not part of the
+  // app build. They are excluded so a broken or colliding script can never fail
+  // "next build" or the production deploy. See the 0d67265 / aa482af deploy incident.
+  "exclude": ["node_modules", "scripts"]
 }

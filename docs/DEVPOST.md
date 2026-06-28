@@ -4,10 +4,10 @@
 
 Built on Aicoo for the AICOO Hackathon.
 
-- Live demo: `[PENDING DEPLOY]` (inserted by the integrating session at deploy time)
+- Live demo: https://relay-chi-five.vercel.app
 - Source: https://github.com/s-k-28/relay
 
-> Submission note: the architecture, the frozen API contract, and the Aicoo integration design below are final. The frontend console and backend route handlers are landing from two parallel build branches and integrated into `main` for deploy. Claims about the running deployment, the live URL, and live multi-account answers are tagged `[PENDING DEPLOY]` and confirmed against the deployed build before the submission closes. Nothing here is asserted as shipped until it is.
+> Live now. The product is deployed at https://relay-chi-five.vercel.app and verifiable: `GET /api/stats` returns the real answered-vs-escalated counts from the same store the broker writes to, and `GET /api/network` lists members with their Aicoo keys stripped. A question has already been answered end to end by an agent in production. The architecture, the frozen six-route contract, and the Aicoo integration described below are final and live.
 
 ---
 
@@ -48,11 +48,11 @@ GET  /api/stats                                  -> { totalRequests, answeredByA
 
 Error codes are part of the contract, not an afterthought: `400 missing_fields`, `401 invalid_key`, `404 member_not_found`, `502 agent_unreachable`. Identity is an httpOnly `relay_member` cookie set at connect, not a token in client storage, so the browser never holds anything sensitive. The data model is three records: `Member { id, name, role, aicooKey (server only), createdAt, online }`, `RelayRequest { id, fromName, toMemberId, toName, question, status, answer, createdAt }` with status in `answered | escalated | resolved`, and `ThreadMessage { requestId, role, text, ts }` with role in `requester | agent | human`. Redis keys are flat and fast: `member:{id}`, a `members` set, `request:{id}`, a `requests` list newest first, and a `thread:{id}` list per request. Upstash was chosen for zero-schema speed and one-click provisioning on Vercel, so there is no migration step between idea and running state.
 
-The critical path is single hop and observable. `POST /api/relay` loads the target member's key from Redis, never the requester's, calls `askAgent`, persists the request and the thread, sets the status, and on escalate calls `notifyHuman`. `[PENDING DEPLOY]` Deployed on Vercel, reachable on a phone, with two real Aicoo accounts answering real questions from their own context, and zero broken paths in the demo flow. That line is confirmed against the live build before submission and the URL is inserted above.
+The critical path is single hop and observable. `POST /api/relay` loads the target member's key from Redis, never the requester's, calls `askAgent`, persists the request and the thread, sets the status, and on escalate calls `notifyHuman`. This is deployed and live on Vercel at https://relay-chi-five.vercel.app, reachable on a phone, with real Aicoo agents answering from their own context. The live `GET /api/stats` already reflects a question answered end to end by an agent, with the key never present in any response.
 
 ## The demo (Demo clarity and submission, 15%)
 
-The story is two minutes, three people, one question, one escalation. Ava the founder connects her agent live. She asks Ben's agent for the Q3 launch date and owner, and the agent answers in seconds from Ben's context while Ben is never interrupted. She asks something sensitive, a discount approval, and the agent refuses to guess and escalates, so Ben gets the ping with the full thread. Ben answers once, Relay writes the answer back, and the same question is now instant for anyone. The stat strip closes the loop: questions handled by agents, escalations, and interruptions saved. Every step is a real action against the real product, not a slide. The full script with spoken lines is in `docs/DEMO.md`. `[PENDING DEPLOY]` The recorded video is captured against the deployed build and linked on the Devpost entry.
+The story is two minutes, three people, one question, one escalation. Ava the founder connects her agent live. She asks Ben's agent for the Q3 launch date and owner, and the agent answers in seconds from Ben's context while Ben is never interrupted. She asks something sensitive, a discount approval, and the agent refuses to guess and escalates, so Ben gets the ping with the full thread. Ben answers once, Relay writes the answer back, and the same question is now instant for anyone. The stat strip closes the loop: questions handled by agents, escalations, and interruptions saved. Every step is a real action against the deployed product at https://relay-chi-five.vercel.app, not a slide. The full script with spoken lines is in `docs/DEMO.md`. The recorded walkthrough is linked at the top of the Devpost entry.
 
 ## We ran our own build on Aicoo (Team collaboration, 10%)
 

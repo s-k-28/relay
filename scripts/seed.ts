@@ -11,6 +11,10 @@
 //
 // The key is read from the environment at runtime and never stored.
 
+// Module marker so this script has its own scope and does not collide with the
+// other scripts in the typecheck program.
+export {};
+
 const AICOO_BASE = "https://www.aicoo.io/api/v1";
 
 type Note = { title: string; content: string };
