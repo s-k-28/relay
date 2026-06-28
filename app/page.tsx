@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { NetworkGraph } from "@/components/NetworkGraph";
-import { Wordmark, RelayMark } from "@/components/brand";
+import { RelayMark } from "@/components/brand";
 import { ArrowRight, Bolt, Hand, Node, ShieldLock } from "@/components/icons";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { Typewriter } from "@/components/Typewriter";
+import { Nav } from "@/components/site/Nav";
+import { Footer } from "@/components/site/Footer";
 
 const RELAY_QUESTIONS = [
   "what is the Q3 launch date and who owns it?",
@@ -57,27 +59,7 @@ const CONTRASTS = [
 export default function Landing() {
   return (
     <div className="relative flex min-h-full flex-col">
-      {/* top bar */}
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-          <Wordmark />
-          <nav className="flex items-center gap-7 text-sm text-muted">
-            <a href="#how" className="hidden transition-colors hover:text-ink sm:inline">
-              How it works
-            </a>
-            <a href="#why" className="hidden transition-colors hover:text-ink sm:inline">
-              Why Relay
-            </a>
-            <Link
-              href="/app"
-              className="group inline-flex items-center gap-1.5 rounded-full border border-line-strong px-4 py-1.5 text-ink transition-colors hover:border-signal hover:text-signal"
-            >
-              Open console
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main className="flex-1">
         {/* hero */}
@@ -98,7 +80,7 @@ export default function Landing() {
               </h1>
               <p className="mt-7 max-w-xl text-[17px] leading-relaxed text-muted">
                 Knowledge work runs on interruptions, and most of them are questions already
-                answered somewhere the asker cannot see. Relay connects each person's Aicoo agent to
+                answered somewhere the asker cannot see. Relay connects each person&apos;s Aicoo agent to
                 the network. A teammate asks, the agent answers in seconds from permitted context,
                 and the human is pulled in only for the genuinely new or sensitive.
               </p>
@@ -229,22 +211,7 @@ export default function Landing() {
         </section>
       </main>
 
-      {/* footer */}
-      <footer className="border-t border-line">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-between gap-6 px-6 py-10 sm:flex-row sm:items-center">
-          <div>
-            <Wordmark />
-            <p className="mt-3 max-w-sm font-serif text-[17px] italic leading-snug text-muted">
-              The interruption layer for teams, replaced by agents.
-            </p>
-          </div>
-          <p className="font-mono text-[11px] leading-relaxed text-faint sm:text-right">
-            Built on Aicoo for the AICOO Hackathon.
-            <br />
-            Person to person agent routing.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
