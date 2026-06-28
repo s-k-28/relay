@@ -14,7 +14,7 @@
 <img alt="Built on Aicoo" src="https://img.shields.io/badge/Built_on-Aicoo-4F46E5?style=for-the-badge">
 </p>
 
-**[Live demo](#)** `[PENDING DEPLOY]` &nbsp;.&nbsp; **[Devpost writeup](docs/DEVPOST.md)** &nbsp;.&nbsp; **[Demo script](docs/DEMO.md)** &nbsp;.&nbsp; **[Market scan](docs/MARKET.md)**
+**[Live demo](https://relay-chi-five.vercel.app)** &nbsp;.&nbsp; **[Devpost writeup](docs/DEVPOST.md)** &nbsp;.&nbsp; **[Demo script](docs/DEMO.md)** &nbsp;.&nbsp; **[Market scan](docs/MARKET.md)**
 
 </div>
 
@@ -22,7 +22,7 @@
 
 Relay is built on [Aicoo](https://www.aicoo.io). Every person connects their own Aicoo agent once. After that, an incoming question is answered by that person's agent, grounded in the context they allowed it to see, in seconds. The human is pinged only when the agent truly cannot help. The human becomes the exception, not the default.
 
-> **Project status.** Active build for the AICOO Hackathon. The six-route API contract, the architecture, the Aicoo integration, and the data model below are frozen and final. The frontend console and the backend route handlers are being implemented in parallel against this contract. The live deployment URL is inserted above once it ships. Anything not yet running is tagged `[PENDING DEPLOY]`.
+> **Live now** at **https://relay-chi-five.vercel.app**, built for the AICOO Hackathon. The six-route API contract, the architecture, the Aicoo integration, and the data model below are final and deployed. The backend is verifiable live: `GET /api/stats` returns the real answered-vs-escalated counts, and `GET /api/network` lists members with their keys stripped.
 
 ## Contents
 
