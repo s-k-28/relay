@@ -22,7 +22,7 @@
 
 Relay is built on [Aicoo](https://www.aicoo.io). Every person connects their own Aicoo agent once. After that, an incoming question is answered by that person's agent, grounded in the context they allowed it to see, in seconds. The human is pinged only when the agent truly cannot help. The human becomes the exception, not the default.
 
-> **Live now** at **https://relay-chi-five.vercel.app**, built for the AICOO Hackathon. The six-route API contract, the architecture, the Aicoo integration, and the data model below are final and deployed. The backend is verifiable live: `GET /api/stats` returns the real answered-vs-escalated counts, and `GET /api/network` lists members with their keys stripped.
+> **Live now** at **https://relay-chi-five.vercel.app**, built for the AICOO Hackathon. The frozen six-route contract, the architecture, the Aicoo integration, and the data model below are final and deployed. The backend is verifiable live: `GET /api/proof` reports every Aicoo endpoint Relay calls plus live activity counts, `GET /api/stats` returns the real answered-vs-escalated numbers, and `GET /api/network` lists members with their keys stripped.
 
 ## Contents
 
@@ -209,10 +209,14 @@ relay/
       thread/route.ts     a request and its messages
       escalate/route.ts   mark escalated, notify human
       stats/route.ts      totals and interruptions saved
+      proof/route.ts      live Aicoo-usage and activity proof
+      share/route.ts      permissioned share link
+  components/             operator console UI (network graph, composer, cards)
   lib/
     aicoo.ts              server-only Aicoo client (validate, ask, notify, accumulate)
     store.ts              Upstash-backed store
     types.ts              shared types (frontend imports read-only)
+  scripts/                ops tools run with tsx (seed, smoke, verify-live)
   docs/                   README companions: DEVPOST, MARKET, DEMO, AICOO-USAGE
   .env.example            the two Upstash variables
 ```
@@ -278,6 +282,17 @@ Relay deploys to Vercel. Push to `main` to auto-deploy. Set the two Upstash vari
 5. The stat strip shows questions handled by agents, escalations, and interruptions saved.
 
 The full two minute script with spoken lines is in [`docs/DEMO.md`](docs/DEMO.md).
+
+## Above and beyond (in progress)
+
+The deployed core is the network, the broker, the escalation guardrail, and the live `/api/proof` endpoint. On top of that green base we are adding a layer of agent-to-agent intelligence, each piece additive so it never destabilizes the running build.
+
+- **Smart routing.** The asker should not have to guess who to ask. We are adding automatic agent selection that uses the Aicoo `search_pulse_contact` tool to find the best member for a question, then routes to that agent. The network finds the right person for you.
+- **Daily briefing digest.** A per-member summary from Aicoo `/briefing`: what your agent answered and escalated for you today. It adds a sixth Aicoo endpoint and is the AI COO surface a team checks each morning.
+- **Dogfooding.** Our build sessions connect their own Aicoo agents to Relay and use it to coordinate this build, so the team-collaboration story becomes the product running on itself.
+- **Further out.** Multi-hop relay, where an escalation tries the next-best agent before pinging the human, and a confidence and context trace shown in the thread.
+
+These are tracked here as in progress, not yet live. Each ships as an additive change to the verified-green deploy, and this section flips to present tense the moment it is deployed and verifiable.
 
 ## Roadmap
 

@@ -59,7 +59,7 @@ const TIERS: Tier[] = [
       "Shared permission policies",
       "Onboarding support",
     ],
-    cta: { label: "Talk to us", href: "mailto:siddarthakodithyala28@gmail.com" },
+    cta: { label: "Talk to us", href: "mailto:hello@relay.app" },
   },
 ];
 

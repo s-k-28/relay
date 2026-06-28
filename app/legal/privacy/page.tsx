@@ -46,7 +46,7 @@ const SECTIONS = [
   {
     h: "7. Contact",
     p: [
-      "Privacy questions and deletion requests can go to siddarthakodithyala28@gmail.com.",
+      "Privacy questions and deletion requests can go to hello@relay.app.",
     ],
   },
 ];

@@ -93,5 +93,6 @@ export async function POST(req: NextRequest) {
     status,
     answer,
     toName: target.name,
+    confidence: reply.confidence,
   });
 }

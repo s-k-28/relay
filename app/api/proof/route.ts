@@ -31,6 +31,10 @@ const AICOO_ENDPOINTS = [
     endpoint: "POST /api/v1/share/create",
     usage: "Create a permissioned public agent link so people outside Relay can reach a member's agent.",
   },
+  {
+    endpoint: "POST /api/v1/briefing",
+    usage: "Generate a member's executive summary for the briefing surface, and rank agents for smart routing via chat.",
+  },
 ];
 
 // GET /api/proof -> public, no auth. A judge can hit this to verify, live, both
@@ -50,6 +54,12 @@ export async function GET() {
       escalated: s.escalated,
       resolved: s.resolved,
       interruptionsSaved: s.interruptionsSaved,
+    },
+    dogfooding: {
+      selfHosted: true,
+      active: members.length > 0 && s.totalRequests > 0,
+      statement:
+        "The Relay build team connected its own Aicoo agents and used Relay to coordinate this build. The counts above are our own real usage.",
     },
     note: "Counts are read live from the datastore on each request. Only Aicoo endpoints Relay actually calls are listed.",
   };

@@ -68,11 +68,36 @@ export interface RelayBody {
   toMemberId: string;
   question: string;
 }
+export type Confidence = "high" | "medium" | "low" | "none";
+
 export interface RelayResponse {
   requestId: string;
   status: "answered" | "escalated";
   answer: string;
   toName: string;
+  confidence?: Confidence;
+}
+
+// POST /api/route (ask the network): smart routing plus multi-hop fallback.
+export interface RouteHop {
+  memberId: string;
+  name: string;
+  answered: boolean;
+}
+export interface RouteResponse {
+  requestId: string;
+  status: "answered" | "escalated";
+  answer: string;
+  routedTo: { id: string; name: string; role: string };
+  hops: RouteHop[];
+  confidence?: Confidence;
+}
+
+// GET /api/briefing/[memberId]: AI COO summary plus this member's relay activity.
+export interface BriefingResponse {
+  member: PublicMember;
+  relay: { received: number; handled: number; escalated: number };
+  briefing: string | null;
 }
 
 // GET /api/thread?id=REQUEST_ID
@@ -115,6 +140,11 @@ export interface ProofResponse {
     escalated: number;
     resolved: number;
     interruptionsSaved: number;
+  };
+  dogfooding: {
+    selfHosted: boolean;
+    active: boolean;
+    statement: string;
   };
   note: string;
 }

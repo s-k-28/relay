@@ -54,7 +54,7 @@ const SECTIONS = [
   {
     h: "8. Contact",
     p: [
-      "Questions about these terms can go to siddarthakodithyala28@gmail.com.",
+      "Questions about these terms can go to hello@relay.app.",
     ],
   },
 ];
