@@ -61,25 +61,6 @@ export function SignIn({ mode }: { mode: Mode }) {
     router.push("/connect");
   }
 
-  function continueWithProvider(provider: "google" | "github") {
-    if (pending) return;
-    setError(null);
-    setPending(provider);
-    // HANDOFF: real OAuth lives in the backend lane and is out of scope here.
-    // A real implementation would not write the session in the browser. It would
-    // redirect to the provider entrypoint, e.g. window.location.href =
-    // `/api/auth/${provider}`, and the callback would create the session server
-    // side from the verified profile (email, name) it gets back. For now we record
-    // a frontend session and move on. Provider secrets are never handled here.
-    finish({
-      provider,
-      // The browser does not know the verified address yet, the OAuth callback would.
-      email: "",
-      // Carry a name the person may have typed on the signup form, if any.
-      name: mode === "signup" && name.trim() ? name.trim() : undefined,
-    });
-  }
-
   function continueWithEmail(e: React.FormEvent) {
     e.preventDefault();
     if (pending) return;
@@ -128,42 +109,7 @@ export function SignIn({ mode }: { mode: Mode }) {
             </h1>
             <p className="mt-3 text-[14.5px] leading-relaxed text-muted">{copy.lead}</p>
 
-            <div className="mt-8 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => continueWithProvider("google")}
-                disabled={pending !== null}
-                className="group inline-flex items-center justify-center gap-3 rounded-full border border-line-strong bg-card px-5 py-3 text-[14.5px] font-medium text-ink transition-colors hover:border-faint hover:bg-raised disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pending === "google" ? (
-                  <Spinner className="h-4 w-4 text-muted" />
-                ) : (
-                  <GoogleMark className="h-[18px] w-[18px]" />
-                )}
-                Continue with Google
-              </button>
-              <button
-                type="button"
-                onClick={() => continueWithProvider("github")}
-                disabled={pending !== null}
-                className="group inline-flex items-center justify-center gap-3 rounded-full border border-line-strong bg-card px-5 py-3 text-[14.5px] font-medium text-ink transition-colors hover:border-faint hover:bg-raised disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {pending === "github" ? (
-                  <Spinner className="h-4 w-4 text-muted" />
-                ) : (
-                  <GitHubMark className="h-[18px] w-[18px] text-ink" />
-                )}
-                Continue with GitHub
-              </button>
-            </div>
-
-            <div className="my-6 flex items-center gap-4" aria-hidden="true">
-              <span className="h-px flex-1 bg-line" />
-              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-ghost">or</span>
-              <span className="h-px flex-1 bg-line" />
-            </div>
-
-            <form onSubmit={continueWithEmail} className="flex flex-col gap-4" noValidate>
+            <form onSubmit={continueWithEmail} className="mt-8 flex flex-col gap-4" noValidate>
               {mode === "signup" && (
                 <>
                   <Field
@@ -321,42 +267,6 @@ function Field({
         }`}
       />
     </div>
-  );
-}
-
-// Provider marks, inlined so there is no asset dependency and they inherit sizing.
-function GoogleMark({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18A10.98 10.98 0 0 0 1 12c0 1.77.43 3.45 1.18 4.94l3.66-2.84Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38Z"
-      />
-    </svg>
-  );
-}
-
-function GitHubMark({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 1.5C6.2 1.5 1.5 6.2 1.5 12c0 4.64 3.01 8.58 7.19 9.97.53.1.72-.23.72-.51l-.01-1.79c-2.93.64-3.55-1.41-3.55-1.41-.48-1.22-1.17-1.54-1.17-1.54-.96-.65.07-.64.07-.64 1.06.07 1.62 1.09 1.62 1.09.94 1.62 2.47 1.15 3.07.88.1-.68.37-1.15.67-1.41-2.34-.27-4.8-1.17-4.8-5.2 0-1.15.41-2.09 1.09-2.83-.11-.27-.47-1.34.1-2.79 0 0 .89-.29 2.91 1.08a10.1 10.1 0 0 1 5.3 0c2.02-1.37 2.9-1.08 2.9-1.08.58 1.45.22 2.52.11 2.79.68.74 1.09 1.68 1.09 2.83 0 4.04-2.47 4.93-4.82 5.19.38.33.71.97.71 1.96l-.01 2.9c0 .29.19.62.73.51A10.51 10.51 0 0 0 22.5 12c0-5.8-4.7-10.5-10.5-10.5Z"
-      />
-    </svg>
   );
 }
 
