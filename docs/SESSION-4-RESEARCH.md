@@ -1,8 +1,13 @@
 # SESSION 4 — RESEARCH, DOCS, SUBMISSION
 
-You are one of four parallel agents building Relay for the AICOO Hackathon. Read `PRD.md` in
-full first. You write words, not app code. Your job is to make the submission undeniable and to
-give the team the language that wins the rubric (PRD section 3).
+You are one of four parallel agents building Relay for the AICOO Hackathon. You start with no
+context, so read `docs/CONTEXT.md` IN FULL first (mission, rubric, contract, Aicoo API reference,
+tools, anti-slop rules). Then read `PRD.md` in full. You write words, not app code. Your job is to
+make the submission undeniable and to give the team the language that wins the rubric.
+
+You have full tooling: Claude Chrome browser automation (load via ToolSearch, see CONTEXT.md
+section 6) and the internet. Use Chrome to research the real competitors (Slack, Glean, Dust,
+Notion AI, Calendly) so the market section is grounded in fact, not assumption.
 
 ## Your lane (do not touch other files)
 

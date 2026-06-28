@@ -148,3 +148,18 @@ Shared types live in `lib/types.ts` (owned by backend session, imported by front
 - Two real Aicoo accounts answer real questions from their own context, live.
 - Zero broken paths in the demo flow.
 - Submission complete on Devpost before 18:00 with video and writeup mapped to the rubric.
+
+## 13. Tooling and access for all sessions
+
+Every build session has full tooling and should use it. See `docs/CONTEXT.md` section 6 for details.
+
+- Claude Chrome browser automation through the `mcp__claude-in-chrome__*` tools. If they are not
+  loaded, load them with ToolSearch first, then call `tabs_context_mcp`, then open a fresh tab.
+  Frontend studies live product UIs and the Aicoo site. Backend can confirm shapes at
+  `https://www.aicoo.io/docs/api/spec`. Research browses the real competitors.
+- Full internet access for documentation and references.
+- GitHub CLI (`gh`) and Vercel CLI (`npx vercel`) are available.
+- Hard limit: no session may sign in, create accounts, or print secret values. When a step needs a
+  login or a secret, stop and hand the human the exact one click. Secrets go into `.env.local` or
+  Vercel environment variables only, never into chat, code, or docs.
+

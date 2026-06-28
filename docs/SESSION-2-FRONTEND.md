@@ -1,9 +1,14 @@
 # SESSION 2 — FRONTEND + UX
 
-You are one of four parallel agents building Relay for the AICOO Hackathon. Read `PRD.md` in
-full first, especially section 5 (flows), section 10 (CONTRACT), and section 11 (demo). The
-product must look genuinely premium. If it looks vibe-coded, we lose. UI quality is a graded
-criterion.
+You are one of four parallel agents building Relay for the AICOO Hackathon. You start with no
+context, so read `docs/CONTEXT.md` IN FULL first (mission, rubric, the frozen contract, the Aicoo
+API reference, the tools you have, anti-slop rules). Then read `PRD.md`, especially section 5
+(flows), section 10 (CONTRACT), and section 11 (demo). The product must look genuinely premium. If
+it looks vibe-coded, we lose. UI quality is a graded criterion.
+
+You have full tooling: Claude Chrome browser automation (load via ToolSearch, see CONTEXT.md
+section 6), the internet, the GitHub and Vercel CLIs. Use Chrome to study real product UIs and the
+live Aicoo site for design language before you commit to a direction.
 
 ## Your lane (do not touch other files)
 

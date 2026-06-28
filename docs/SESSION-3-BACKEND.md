@@ -1,8 +1,14 @@
 # SESSION 3 — BACKEND + AICOO INTEGRATION
 
-You are one of four parallel agents building Relay for the AICOO Hackathon. Read `PRD.md`
-in full first, especially section 10 (CONTRACT) and section 8 (data model). The deadline is
-hard. Build only what the contract specifies. Do not redesign it.
+You are one of four parallel agents building Relay for the AICOO Hackathon. You start with no
+context, so read `docs/CONTEXT.md` IN FULL first (mission, rubric, the frozen contract, the full
+Aicoo API reference with payloads, the tools you have, anti-slop rules). Then read `PRD.md`,
+especially section 10 (CONTRACT) and section 8 (data model). The deadline is hard. Build only what
+the contract specifies. Do not redesign it.
+
+You have full tooling: Claude Chrome browser automation (load via ToolSearch, see CONTEXT.md
+section 6), the internet, the GitHub and Vercel CLIs. The complete Aicoo endpoint specs you need
+are already in CONTEXT.md section 5, so you do not need to log in anywhere to start.
 
 ## Your lane (do not touch other files)
 
