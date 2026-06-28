@@ -30,22 +30,20 @@ const MOTION_CSS = `
 function useThreadMessages(record: RelayRecord | null, stored: ThreadMessage[] | undefined) {
   const haveStored = !!(stored && stored.length);
   const reqId = record?.requestId ?? null;
-  const [fetched, setFetched] = useState<ThreadMessage[] | null>(null);
+  // Fetched messages are tagged with the relay they belong to, so a stale result
+  // from a previous selection is ignored at read time rather than reset in the effect.
+  const [fetched, setFetched] = useState<{ id: string; messages: ThreadMessage[] } | null>(null);
 
   useEffect(() => {
-    if (!reqId || haveStored) {
-      setFetched(null);
-      return;
-    }
+    if (!reqId || haveStored) return;
     let alive = true;
-    setFetched(null);
     api
       .thread(reqId)
       .then((res) => {
-        if (alive) setFetched(res.messages ?? null);
+        if (alive && res.messages?.length) setFetched({ id: reqId, messages: res.messages });
       })
       .catch(() => {
-        if (alive) setFetched(null);
+        /* keep the synthesized fallback */
       });
     return () => {
       alive = false;
@@ -55,7 +53,7 @@ function useThreadMessages(record: RelayRecord | null, stored: ThreadMessage[] |
   return useMemo<ThreadMessage[]>(() => {
     if (!record) return [];
     if (haveStored) return stored!;
-    if (fetched && fetched.length) return fetched;
+    if (fetched && fetched.id === record.requestId) return fetched.messages;
     return synthesizeThread(record);
   }, [record, haveStored, stored, fetched]);
 }
@@ -96,27 +94,21 @@ export function ThreadsScreen() {
     [history, filter],
   );
 
-  // Keep a valid selection: default to the newest row, keep the current one while it
-  // is still visible, and clear it when the active filter empties out.
-  useEffect(() => {
-    if (filtered.length === 0) {
-      setSelectedId(null);
-      return;
-    }
-    setSelectedId((cur) =>
-      cur && filtered.some((r) => r.requestId === cur) ? cur : filtered[0].requestId,
-    );
-  }, [filtered]);
+  // Resolve the active relay during render rather than in an effect: keep the user's
+  // explicit pick while it stays visible, otherwise default to the newest row, and
+  // fall to null when the active filter matches nothing.
+  const activeId = useMemo(() => {
+    if (filtered.length === 0) return null;
+    if (selectedId && filtered.some((r) => r.requestId === selectedId)) return selectedId;
+    return filtered[0].requestId;
+  }, [filtered, selectedId]);
 
   const selectedRecord = useMemo(
-    () => history.find((r) => r.requestId === selectedId) ?? null,
-    [history, selectedId],
+    () => history.find((r) => r.requestId === activeId) ?? null,
+    [history, activeId],
   );
   const selectedRole = selectedRecord ? roleById[selectedRecord.toMemberId] ?? null : null;
-  const messages = useThreadMessages(
-    selectedRecord,
-    selectedId ? threadsById[selectedId] : undefined,
-  );
+  const messages = useThreadMessages(selectedRecord, activeId ? threadsById[activeId] : undefined);
 
   function openRow(id: string) {
     setSelectedId(id);
@@ -163,7 +155,7 @@ export function ThreadsScreen() {
               counts={counts}
               filter={filter}
               onFilter={setFilter}
-              selectedId={selectedId}
+              selectedId={activeId}
               onSelect={openRow}
               roleById={roleById}
             />
