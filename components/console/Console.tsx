@@ -1,94 +1,72 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { api, ApiError, isBackendLive } from "../api";
-import type { Member, Stats, ThreadMessage } from "../types";
-import { Wordmark, SignalDot } from "../brand";
-import { getAccount, clearAccount } from "../auth/session";
-import { Avatar } from "./Avatar";
+// The Network screen body. Gating and the shell chrome now live in app/app/layout,
+// so this is purely the network view: a compact live band, the stat row, the
+// directory, and the composer, all reading and writing the shared store.
+//
+// Per-member conversation is reconstructed from the store: history maps each request
+// to its member, and threadsById holds the message pair. The in-flight question and
+// any send error are local view state layered on top, so the store only ever holds
+// completed exchanges that the Threads and Insights screens can trust.
+
+import { useMemo, useState } from "react";
+import type { ThreadMessage } from "@/components/types";
+import { ApiError } from "@/components/api";
+import { NetworkGraph } from "@/components/NetworkGraph";
+import { useRelay } from "./store";
 import { AgentCard } from "./AgentCard";
 import { Composer } from "./Composer";
 import { StatStrip } from "./StatStrip";
 
-export function Console() {
-  const router = useRouter();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [meId, setMeId] = useState<string | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [ready, setReady] = useState(false);
-  const [live, setLive] = useState(false);
+export function NetworkScreen() {
+  const { members, meId, stats, history, threadsById, selectedId, thinking, select, relay } = useRelay();
 
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [threads, setThreads] = useState<Record<string, ThreadMessage[]>>({});
-  const [thinking, setThinking] = useState(false);
+  // The question currently in flight and the last send error. Both are cleared as the
+  // store settles, so they never double up with the persisted thread.
+  const [pending, setPending] = useState<ThreadMessage | null>(null);
+  const [errorNote, setErrorNote] = useState<ThreadMessage | null>(null);
 
-  const refreshStats = useCallback(async () => {
-    try {
-      setStats(await api.stats());
-    } catch {
-      /* stats are non-critical, leave the prior value */
-    }
-  }, []);
+  const me = useMemo(() => (meId ? members.find((m) => m.id === meId) ?? null : null), [members, meId]);
+  const others = useMemo(() => members.filter((m) => m.id !== meId), [members, meId]);
+  const selected = useMemo(() => members.find((m) => m.id === selectedId) ?? null, [members, selectedId]);
 
-  const loadNetwork = useCallback(async () => {
-    const net = await api.network();
-    setMembers(net.members);
-    setMeId(net.meId);
-    setLive(isBackendLive());
-    return net;
-  }, []);
+  // Reconstruct the thread with the selected member from the request-keyed store.
+  // history is newest first, so reverse the matches to read oldest to newest.
+  const baseThread = useMemo<ThreadMessage[]>(() => {
+    if (!selectedId) return [];
+    return history
+      .filter((r) => r.toMemberId === selectedId)
+      .slice()
+      .reverse()
+      .flatMap((r) => threadsById[r.requestId] ?? []);
+  }, [history, threadsById, selectedId]);
 
-  useEffect(() => {
-    // Gate the console behind a sign in. No account, back to /login.
-    if (!getAccount()) {
-      router.replace("/login");
-      return;
-    }
-    (async () => {
-      try {
-        const net = await loadNetwork();
-        // Signed in but not yet connected to Aicoo. Connecting now happens on /connect,
-        // so send them there rather than rendering an empty console.
-        if (!net.meId) {
-          router.replace("/connect");
-          return;
-        }
-        await refreshStats();
-        setReady(true);
-      } catch {
-        // Network call failed outright. Surface the console shell so the header and
-        // its sign out stay reachable rather than trapping the person on a spinner.
-        setReady(true);
-      }
-    })();
-  }, [loadNetwork, refreshStats, router]);
+  const messages = useMemo<ThreadMessage[]>(() => {
+    if (!pending && !errorNote) return baseThread;
+    const extra: ThreadMessage[] = [];
+    if (pending) extra.push(pending);
+    if (errorNote) extra.push(errorNote);
+    return [...baseThread, ...extra];
+  }, [baseThread, pending, errorNote]);
 
-  function handleSignOut() {
-    clearAccount();
-    router.push("/");
+  const onlineCount = others.filter((m) => m.online).length;
+  const last = baseThread[baseThread.length - 1];
+  const escalated = !thinking && !pending && last?.role === "human";
+
+  function handleSelect(id: string) {
+    select(id);
+    setPending(null);
+    setErrorNote(null);
   }
 
   async function handleSend(question: string) {
     if (!selectedId || thinking) return;
-    const target = selectedId;
-    const askedAt = Date.now();
-    const requesterMsg: ThreadMessage = { requestId: "local", role: "requester", text: question, ts: askedAt };
-    setThreads((t) => ({ ...t, [target]: [...(t[target] ?? []), requesterMsg] }));
-    setThinking(true);
+    setErrorNote(null);
+    setPending({ requestId: "pending", role: "requester", text: question, ts: Date.now() });
     try {
-      const res = await api.relay(target, question);
-      const reply: ThreadMessage = {
-        requestId: res.requestId,
-        role: res.status === "escalated" ? "human" : "agent",
-        text: res.answer,
-        ts: Date.now(),
-      };
-      setThreads((t) => ({ ...t, [target]: [...(t[target] ?? []), reply] }));
-      await refreshStats();
+      await relay(selectedId, question);
     } catch (err) {
-      const note: ThreadMessage = {
+      setErrorNote({
         requestId: "error",
         role: "agent",
         text:
@@ -96,142 +74,103 @@ export function Console() {
             ? "I could not reach that agent just now. Give it a moment and try again."
             : "Something interrupted the relay. Try sending that again.",
         ts: Date.now(),
-      };
-      setThreads((t) => ({ ...t, [target]: [...(t[target] ?? []), note] }));
+      });
     } finally {
-      setThinking(false);
+      setPending(null);
     }
   }
 
-  const me = useMemo(() => members.find((m) => m.id === meId) ?? null, [members, meId]);
-  const others = useMemo(() => members.filter((m) => m.id !== meId), [members, meId]);
-  const selected = useMemo(() => members.find((m) => m.id === selectedId) ?? null, [members, selectedId]);
-  const selectedThread = selectedId ? threads[selectedId] ?? [] : [];
-  const onlineCount = others.filter((m) => m.online).length;
-  const lastMsg = selectedThread[selectedThread.length - 1];
-  const escalated = lastMsg?.role === "human";
-
-  if (!ready) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <div className="flex items-center gap-3 text-faint">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-signal" />
-          <span className="font-mono text-[12px] uppercase tracking-[0.16em]">Loading network</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <ConsoleHeader me={me} live={live} onSignOut={handleSignOut} />
-
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-          <div className="anim-fade flex flex-col gap-6">
-            <StatStrip stats={stats} loading={!stats} />
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
-              {/* network directory */}
-              <section aria-label="Network directory" className="flex flex-col gap-3">
-                <div className="flex items-baseline justify-between">
-                  <h2 className="font-mono text-[12px] uppercase tracking-[0.16em] text-faint">
-                    Network
-                  </h2>
-                  <span className="font-mono text-[11px] text-ghost">
-                    {others.length} agents · {onlineCount} online
-                  </span>
-                </div>
-
-                {me && (
-                  <div className="flex flex-col gap-2">
-                    <AgentCard member={me} isMe selected={false} onSelect={() => {}} />
-                  </div>
-                )}
-
-                <div className="rule-fade my-1" />
-
-                <div className="flex flex-col gap-2">
-                  {others.length === 0 ? (
-                    <p className="rounded-xl border border-line bg-card px-4 py-6 text-center text-[13px] leading-relaxed text-faint">
-                      You are the first node here. Share Relay with a teammate so there is someone to
-                      ask.
-                    </p>
-                  ) : (
-                    others.map((m) => (
-                      <AgentCard
-                        key={m.id}
-                        member={m}
-                        isMe={false}
-                        selected={m.id === selectedId}
-                        onSelect={setSelectedId}
-                      />
-                    ))
-                  )}
-                </div>
-              </section>
-
-              {/* composer */}
-              <section aria-label="Relay a question" className="lg:sticky lg:top-24 lg:self-start">
-                <Composer
-                  selected={selected}
-                  messages={selectedThread}
-                  thinking={thinking}
-                  escalated={escalated}
-                  onSend={handleSend}
-                />
-              </section>
+    <div className="mx-auto w-full max-w-6xl px-5 py-7 sm:px-6 sm:py-8">
+      <div className="flex flex-col gap-6">
+        {/* live band */}
+        <section
+          className="anim-rise relative overflow-hidden rounded-2xl border border-line bg-card"
+          style={{ animationDelay: "0ms" }}
+        >
+          <div className="aurora" aria-hidden="true" />
+          <div className="relative flex items-center justify-between gap-6 px-6 py-6 sm:px-8">
+            <div className="min-w-0">
+              <p className="eyebrow mb-3">Live network</p>
+              <h1 className="font-serif text-[clamp(1.6rem,3vw,2.1rem)] font-medium leading-tight tracking-[-0.01em] text-ink">
+                Ask anyone, stay heads down.
+              </h1>
+              <p className="mt-2.5 max-w-md text-[14px] leading-relaxed text-muted">
+                Pick a teammate and their agent answers from permitted context. A human is pulled in
+                only when the agent genuinely cannot help.
+              </p>
+              <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
+                {others.length} agents · {onlineCount} online
+              </p>
+            </div>
+            <div className="hidden h-[170px] w-[300px] shrink-0 items-center justify-center md:flex">
+              <NetworkGraph className="h-full w-full opacity-90" />
             </div>
           </div>
-      </main>
-    </div>
-  );
-}
+        </section>
 
-function ConsoleHeader({
-  me,
-  live,
-  onSignOut,
-}: {
-  me: Member | null;
-  live: boolean;
-  onSignOut: () => void;
-}) {
-  return (
-    <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="transition-opacity hover:opacity-80" aria-label="Relay home">
-          <Wordmark />
-        </Link>
-        <div className="flex items-center gap-4">
-          <span
-            title={live ? "Connected to live Relay routes." : "Routes are not deployed yet, showing preview data."}
-            className="hidden items-center gap-1.5 rounded-full border border-line px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] sm:flex"
+        {/* compact stat row */}
+        <div className="anim-rise" style={{ animationDelay: "80ms" }}>
+          <StatStrip stats={stats} loading={!stats} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,360px)_1fr]">
+          {/* directory */}
+          <section
+            aria-label="Network directory"
+            className="anim-rise flex flex-col gap-3"
+            style={{ animationDelay: "160ms" }}
           >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ background: live ? "var(--online)" : "var(--ghost)" }}
-            />
-            <span className="text-faint">{live ? "Live data" : "Preview data"}</span>
-          </span>
-          {me && (
-            <span className="flex items-center gap-2.5 rounded-full border border-line bg-card py-1 pl-1.5 pr-3.5">
-              <Avatar name={me.name} you size="sm" />
-              <span className="flex flex-col leading-tight">
-                <span className="text-[12.5px] font-medium text-ink">{me.name}</span>
-                <span className="font-mono text-[10px] text-faint">{me.role}</span>
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-mono text-[12px] uppercase tracking-[0.16em] text-faint">Network</h2>
+              <span className="font-mono text-[11px] text-ghost">
+                {others.length} agents · {onlineCount} online
               </span>
-              <SignalDot online={me.online} className="ml-0.5" />
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="rounded-full border border-line px-3.5 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line-strong hover:text-ink"
+            </div>
+
+            {me && (
+              <div className="flex flex-col gap-2">
+                <AgentCard member={me} isMe selected={false} onSelect={() => {}} />
+              </div>
+            )}
+
+            <div className="rule-fade my-1" />
+
+            <div className="flex flex-col gap-2">
+              {others.length === 0 ? (
+                <p className="rounded-xl border border-line bg-card px-4 py-6 text-center text-[13px] leading-relaxed text-faint">
+                  You are the first node here. Share Relay with a teammate so there is someone to ask.
+                </p>
+              ) : (
+                others.map((m) => (
+                  <AgentCard
+                    key={m.id}
+                    member={m}
+                    isMe={false}
+                    selected={m.id === selectedId}
+                    onSelect={handleSelect}
+                  />
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* composer */}
+          <section
+            aria-label="Relay a question"
+            className="anim-rise lg:sticky lg:top-[88px] lg:self-start"
+            style={{ animationDelay: "240ms" }}
           >
-            Sign out
-          </button>
+            <Composer
+              selected={selected}
+              messages={messages}
+              thinking={thinking}
+              escalated={escalated}
+              onSend={handleSend}
+            />
+          </section>
         </div>
       </div>
-    </header>
+    </div>
   );
 }
