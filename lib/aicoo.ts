@@ -4,10 +4,10 @@
 
 const BASE = "https://www.aicoo.io/api/v1";
 
-// Agent calls can take a while. Aicoo's runtime routinely needs 25 to 40
-// seconds to compose a grounded answer, so cap generously to avoid aborting a
-// real answer. Route handlers set maxDuration so the function has room to wait.
-const TIMEOUT_MS = 45000;
+// Agent calls can take a while. Warm calls return in under 10 seconds, but a
+// cold agent run can take 45 seconds or more, so cap just under the route
+// maxDuration of 60 to give a real cold answer room to finish rather than 502.
+const TIMEOUT_MS = 55000;
 
 export class AicooError extends Error {
   status: number;
@@ -152,6 +152,22 @@ function isEscalate(text: string): boolean {
   return /^[`*_"'.,!?:;\s-]*ESCALATE\b/i.test(text);
 }
 
+// Some agent backends, when out of quota or rate limited, reply with a service
+// notice like "Token Limit Exceeded. Please upgrade your subscription." That is
+// not an answer to the teammate's question, so treat it as an escalation rather
+// than surfacing the upsell to the requester as a confident answer.
+function looksLikeServiceError(text: string): boolean {
+  if (!text) return false;
+  const t = text.toLowerCase();
+  return (
+    t.includes("token limit exceeded") ||
+    /reached your (weekly|monthly|daily)?\s*token limit/.test(t) ||
+    t.includes("upgrade your subscription") ||
+    t.includes("rate limit exceeded") ||
+    /quota (has been )?exceeded/.test(t)
+  );
+}
+
 // Pull an optional CONFIDENCE tag off the end of an answer and strip it so the
 // answer text stays clean. Defaults to high when the agent answered but omitted
 // the tag, so existing answers never regress.
@@ -208,7 +224,7 @@ export async function askAgent(
     raw = extractText(data);
   }
 
-  if (isEscalate(raw)) {
+  if (isEscalate(raw) || looksLikeServiceError(raw)) {
     return { answer: "", escalate: true, confidence: "none" };
   }
   const { answer, confidence } = parseConfidence(raw);

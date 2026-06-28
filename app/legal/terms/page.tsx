@@ -42,7 +42,7 @@ const SECTIONS = [
   {
     h: "6. Hackathon build disclaimer",
     p: [
-      "Relay was built for the AICOO Hackathon. It is a demonstration, not a hardened production service. Pricing figures shown on this site are illustrative. Do not rely on Relay for anything critical, and do not connect a key or context you cannot afford to expose to a demonstration system.",
+      "Relay is an early-stage product under active development. Features and pricing may change as the product evolves. Connect only the context you are comfortable sharing with a connected agent.",
     ],
   },
   {

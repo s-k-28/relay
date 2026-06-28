@@ -73,7 +73,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
         <Link href="/pricing" className="text-signal-dim underline-offset-4 hover:underline">
           pricing page
         </Link>{" "}
-        for the three tiers. Figures shown there are illustrative for the hackathon build.
+        for the three tiers. Figures shown there are illustrative and subject to change.
       </>
     ),
   },
