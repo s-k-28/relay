@@ -282,6 +282,131 @@
   animation: fade-in 0.5s ease both;
 }
 
+/* a soft, pointer tracked spotlight on cards. tokens, not a library. */
+@layer utilities {
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(
+      16rem 16rem at var(--mx, 50%) var(--my, 0%),
+      rgba(212, 242, 90, 0.1),
+      transparent 62%
+    );
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+
+  /* a single bright sweep across a button on hover */
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 45%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.45),
+      transparent
+    );
+    transform: translateX(-200%) skewX(-14deg);
+  }
+  .shine:hover::after {
+    animation: shine 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes shine {
+  to {
+    transform: translateX(240%) skewX(-14deg);
+  }
+}
+
+/* answer text arriving, word by word */
+@keyframes word-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* a ring expanding off an online node */
+@keyframes node-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  80%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* atmosphere: two slow drifting pools of light, depth without noise */
+.aurora {
+  position: absolute;
+  inset: -25% -10% auto -10%;
+  height: 80%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+}
+.aurora::before {
+  width: 40rem;
+  height: 26rem;
+  left: -4rem;
+  top: -6rem;
+  background: radial-gradient(circle, rgba(212, 242, 90, 0.07), transparent 68%);
+  animation: aurora-drift 24s ease-in-out infinite;
+}
+.aurora::after {
+  width: 34rem;
+  height: 24rem;
+  right: -4rem;
+  top: 1rem;
+  background: radial-gradient(circle, rgba(120, 150, 220, 0.06), transparent 68%);
+  animation: aurora-drift 30s ease-in-out -10s infinite reverse;
+}
+
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(4rem, 2rem, 0) scale(1.12);
+  }
+  66% {
+    transform: translate3d(-3rem, 3rem, 0) scale(0.92);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

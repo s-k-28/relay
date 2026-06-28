@@ -99,7 +99,7 @@ export function ConnectPanel({
           <button
             type="submit"
             disabled={!canSubmit}
-            className="group mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-signal px-6 py-3 text-[15px] font-semibold text-bg transition-transform enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+            className="shine group mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-signal px-6 py-3 text-[15px] font-semibold text-bg transition-transform enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? (
               <>

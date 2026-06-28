@@ -2,6 +2,15 @@ import Link from "next/link";
 import { NetworkGraph } from "@/components/NetworkGraph";
 import { Wordmark, RelayMark } from "@/components/brand";
 import { ArrowRight, Bolt, Hand, Node, ShieldLock } from "@/components/icons";
+import { SpotlightCard } from "@/components/SpotlightCard";
+import { Typewriter } from "@/components/Typewriter";
+
+const RELAY_QUESTIONS = [
+  "what is the Q3 launch date and who owns it?",
+  "how do deploys go out to production?",
+  "what is our standing discount authority?",
+  "when do customer renewals open?",
+];
 
 const STEPS = [
   {
@@ -73,7 +82,8 @@ export default function Landing() {
       <main className="flex-1">
         {/* hero */}
         <section className="relative overflow-hidden">
-          <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
+          <div className="aurora" aria-hidden="true" />
+          <div className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-6 pb-20 pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-24">
             <div className="anim-rise">
               <p className="eyebrow mb-6 flex items-center gap-2.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-signal" />
@@ -95,7 +105,7 @@ export default function Landing() {
               <div className="mt-9 flex flex-wrap items-center gap-3">
                 <Link
                   href="/app"
-                  className="group inline-flex items-center gap-2 rounded-full bg-signal px-6 py-3 text-[15px] font-semibold text-bg transition-transform hover:-translate-y-0.5"
+                  className="shine group inline-flex items-center gap-2 rounded-full bg-signal px-6 py-3 text-[15px] font-semibold text-bg transition-transform hover:-translate-y-0.5"
                 >
                   Connect your agent
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -121,6 +131,19 @@ export default function Landing() {
                     <span className="eyebrow">Live network</span>
                     <span className="font-mono text-[11px] text-faint">6 agents · 5 online</span>
                   </div>
+                  <div className="mx-2 mt-2 flex items-center gap-2 overflow-hidden rounded-lg border border-line bg-bg/60 px-3 py-2">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-signal-dim">
+                      relay
+                    </span>
+                    <span className="text-faint" aria-hidden="true">
+                      →
+                    </span>
+                    <Typewriter
+                      words={RELAY_QUESTIONS}
+                      className="truncate font-mono text-[12px] text-muted"
+                      caretClassName="text-signal"
+                    />
+                  </div>
                   <NetworkGraph className="w-full" />
                   <div className="rule-fade mx-2 mb-3" />
                   <p className="px-2 pb-1 font-mono text-[11px] leading-relaxed text-faint">
@@ -142,15 +165,19 @@ export default function Landing() {
               Four steps. Then the interruptions stop.
             </h2>
           </div>
-          <ol className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+          <ol className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {STEPS.map((s) => (
-              <li key={s.n} className="card-grad group flex flex-col gap-4 p-7 sm:p-8">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[13px] text-signal-dim">{s.n}</span>
-                  <s.icon className="h-5 w-5 text-faint transition-colors group-hover:text-ink" />
-                </div>
-                <h3 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{s.title}</h3>
-                <p className="text-[15px] leading-relaxed text-muted">{s.body}</p>
+              <li key={s.n}>
+                <SpotlightCard className="card-grad group h-full rounded-2xl border border-line p-7 transition-colors hover:border-line-strong sm:p-8">
+                  <div className="relative z-10 flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-[13px] text-signal-dim">{s.n}</span>
+                      <s.icon className="h-5 w-5 text-faint transition-colors group-hover:text-ink" />
+                    </div>
+                    <h3 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">{s.title}</h3>
+                    <p className="text-[15px] leading-relaxed text-muted">{s.body}</p>
+                  </div>
+                </SpotlightCard>
               </li>
             ))}
           </ol>
@@ -192,7 +219,7 @@ export default function Landing() {
               </p>
               <Link
                 href="/app"
-                className="group mt-9 inline-flex items-center gap-2 rounded-full bg-signal px-7 py-3 text-[15px] font-semibold text-bg transition-transform hover:-translate-y-0.5"
+                className="shine group mt-9 inline-flex items-center gap-2 rounded-full bg-signal px-7 py-3 text-[15px] font-semibold text-bg transition-transform hover:-translate-y-0.5"
               >
                 Connect your agent
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
