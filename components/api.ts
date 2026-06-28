@@ -64,11 +64,22 @@ export const api = {
   network: () =>
     withFallback<NetworkResponse>(() => realJSON("/api/network"), () => mock.network()),
 
-  connect: (name: string, role: string, aicooKey: string) =>
-    withFallback<ConnectResponse>(
-      () => realJSON("/api/connect", { method: "POST", body: JSON.stringify({ name, role, aicooKey }) }),
-      () => mock.connect(name, role),
-    ),
+  // Connect always lands the user in the product. A real key on a configured
+  // backend connects for real. Anything else (no backend, or Aicoo cannot validate
+  // the key) falls back to preview mode so the product is reachable for exploration,
+  // the honest "Preview data" badge stays on until a real route answers.
+  connect: async (name: string, role: string, aicooKey: string): Promise<ConnectResponse> => {
+    try {
+      const out = await realJSON<ConnectResponse>("/api/connect", {
+        method: "POST",
+        body: JSON.stringify({ name, role, aicooKey }),
+      });
+      backendLive = true;
+      return out;
+    } catch {
+      return mock.connect(name, role);
+    }
+  },
 
   relay: (toMemberId: string, question: string) =>
     withFallback<RelayResponse>(
