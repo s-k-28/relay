@@ -99,8 +99,7 @@ export interface EscalateResponse {
 
 // POST /api/share (additive Aicoo surface, not part of the original six)
 export interface ShareResponse {
-  shareUrl: string;
-  agentUrl: string;
+  shareLink: { url: string; agentUrl: string };
 }
 
 // GET /api/proof (public, no auth) -> self-reporting proof of real Aicoo usage.

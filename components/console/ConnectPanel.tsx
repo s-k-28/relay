@@ -8,12 +8,15 @@ export function ConnectPanel({
   onConnect,
   submitting,
   error,
+  defaultName = "",
 }: {
   onConnect: (name: string, role: string, aicooKey: string) => void;
   submitting: boolean;
   error: string | null;
+  // Optional prefill, used on /connect to carry the name from the sign in step.
+  defaultName?: string;
 }) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(defaultName);
   const [role, setRole] = useState("");
   const [key, setKey] = useState("");
   const [touched, setTouched] = useState(false);

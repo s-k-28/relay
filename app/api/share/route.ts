@@ -20,5 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "agent_unreachable" }, { status: 502 });
   }
 
-  return NextResponse.json({ shareUrl: link.url, agentUrl: link.agentUrl });
+  // Pass Aicoo's shareLink through unchanged so the client gets a real clickable
+  // url and the agentUrl for the permissioned public agent.
+  return NextResponse.json({ shareLink: { url: link.url, agentUrl: link.agentUrl } });
 }
