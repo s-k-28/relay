@@ -4,10 +4,10 @@
 
 const BASE = "https://www.aicoo.io/api/v1";
 
-// Agent calls can take a while. Aicoo's runtime routinely needs 25 to 40
-// seconds to compose a grounded answer, so cap generously to avoid aborting a
-// real answer. Route handlers set maxDuration so the function has room to wait.
-const TIMEOUT_MS = 45000;
+// Agent calls can take a while. Warm calls return in under 10 seconds, but a
+// cold agent run can take 45 seconds or more, so cap just under the route
+// maxDuration of 60 to give a real cold answer room to finish rather than 502.
+const TIMEOUT_MS = 55000;
 
 export class AicooError extends Error {
   status: number;
