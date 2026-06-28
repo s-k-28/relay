@@ -16,14 +16,18 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   let body: Partial<RelayBody>;
   try {
-    body = await req.json();
+    const parsed: unknown = await req.json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+    }
+    body = parsed as Partial<RelayBody>;
   } catch {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
   const toMemberId = typeof body.toMemberId === "string" ? body.toMemberId.trim() : "";
   const question = typeof body.question === "string" ? body.question.trim() : "";
-  if (!toMemberId || !question) {
+  if (!toMemberId || !question || question.length > 4000) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
 
@@ -50,23 +54,31 @@ export async function POST(req: NextRequest) {
 
   const status = reply.escalate ? "escalated" : "answered";
   const answer = reply.escalate
-    ? `This one needs ${target.name} directly, so I have escalated it and notified them with the full thread.`
+    ? `This one needs ${target.name} directly, so I have escalated it and pinged them to respond.`
     : reply.answer;
 
-  const request = await createRequest({
-    fromName,
-    toMemberId: target.id,
-    toName: target.name,
-    question,
-    status,
-    answer,
-  });
+  // Persist the request and its opening thread. If the store is unreachable,
+  // surface it as the agent path being unusable instead of returning a success
+  // the client could never follow up on.
+  let request;
+  try {
+    request = await createRequest({
+      fromName,
+      toMemberId: target.id,
+      toName: target.name,
+      question,
+      status,
+      answer,
+    });
+    await appendThread({ requestId: request.id, role: "requester", text: question, ts: Date.now() });
+    await appendThread({ requestId: request.id, role: "agent", text: answer, ts: Date.now() });
+  } catch {
+    return NextResponse.json({ error: "agent_unreachable" }, { status: 502 });
+  }
 
-  await appendThread({ requestId: request.id, role: "requester", text: question, ts: Date.now() });
-  await appendThread({ requestId: request.id, role: "agent", text: answer, ts: Date.now() });
-
+  // Side effects are non critical and already fail soft internally, so they
+  // never turn a completed answer into an error.
   if (reply.escalate) {
-    // Fail soft: the request is already marked escalated regardless.
     await notifyHuman(
       target.aicooKey,
       `Relay escalation from ${fromName}: "${question}". Open Relay to respond.`,

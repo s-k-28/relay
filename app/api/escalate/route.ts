@@ -11,7 +11,11 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   let body: Partial<EscalateBody>;
   try {
-    body = await req.json();
+    const parsed: unknown = await req.json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+    }
+    body = parsed as Partial<EscalateBody>;
   } catch {
     return NextResponse.json({ error: "missing_fields" }, { status: 400 });
   }
@@ -24,6 +28,11 @@ export async function POST(req: NextRequest) {
   const request = await getRequest(requestId);
   if (!request) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  // Idempotent: only the first transition pings the human and writes the note.
+  if (request.status === "escalated") {
+    return NextResponse.json({ ok: true, status: "escalated", notified: false });
   }
 
   await setRequestStatus(requestId, "escalated");

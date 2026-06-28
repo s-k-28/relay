@@ -31,8 +31,9 @@ function db(): Redis {
 }
 
 // Strip the Aicoo key. This is the only shape that ever reaches the client,
-// so the key cannot leak through the directory by construction.
-function toPublic(m: Member): PublicMember {
+// so the key cannot leak through the directory by construction. Every response
+// that exposes a member must go through this single projection.
+export function toPublic(m: Member): PublicMember {
   return { id: m.id, name: m.name, role: m.role, online: m.online };
 }
 
