@@ -283,6 +283,17 @@ Relay deploys to Vercel. Push to `main` to auto-deploy. Set the two Upstash vari
 
 The full two minute script with spoken lines is in [`docs/DEMO.md`](docs/DEMO.md).
 
+## Above and beyond (in progress)
+
+The deployed core is the network, the broker, the escalation guardrail, and the live `/api/proof` endpoint. On top of that green base we are adding a layer of agent-to-agent intelligence, each piece additive so it never destabilizes the running build.
+
+- **Smart routing.** The asker should not have to guess who to ask. We are adding automatic agent selection that uses the Aicoo `search_pulse_contact` tool to find the best member for a question, then routes to that agent. The network finds the right person for you.
+- **Daily briefing digest.** A per-member summary from Aicoo `/briefing`: what your agent answered and escalated for you today. It adds a sixth Aicoo endpoint and is the AI COO surface a team checks each morning.
+- **Dogfooding.** Our build sessions connect their own Aicoo agents to Relay and use it to coordinate this build, so the team-collaboration story becomes the product running on itself.
+- **Further out.** Multi-hop relay, where an escalation tries the next-best agent before pinging the human, and a confidence and context trace shown in the thread.
+
+These are tracked here as in progress, not yet live. Each ships as an additive change to the verified-green deploy, and this section flips to present tense the moment it is deployed and verifiable.
+
 ## Roadmap
 
 - **Aicoo OAuth.** Aicoo OAuth is not released yet, so Relay uses the sanctioned API-key model today. When OAuth ships, connect swaps the pasted key for an OAuth grant, with no change to the routing model.
