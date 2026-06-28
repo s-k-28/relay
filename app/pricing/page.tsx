@@ -142,7 +142,7 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-8 font-mono text-[11px] leading-relaxed text-faint">
-          Figures are illustrative for the AICOO Hackathon build. Aicoo&apos;s free tier allows 10
+          Figures are illustrative and subject to change. Aicoo&apos;s free tier allows 10
           requests per minute, so Relay keeps every call lean.
         </p>
       </section>
