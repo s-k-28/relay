@@ -5,6 +5,7 @@ import type { EscalateBody } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // POST /api/escalate { requestId }
 // Marks a request escalated and pings the human through Aicoo. Notify is fail soft.

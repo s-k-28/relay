@@ -4,6 +4,7 @@ import { getMember } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // POST /api/share -> create a permissioned public agent link for the current
 // member through Aicoo /share/create. Additive surface, not in the original six.

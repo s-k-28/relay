@@ -9,6 +9,7 @@ import type { RelayBody } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // POST /api/relay { toMemberId, question }
 // Brokers the question to the target member's own agent, persists the request
