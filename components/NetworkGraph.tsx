@@ -51,6 +51,9 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
         <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="4" />
         </filter>
+        <filter id="beam" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.6" />
+        </filter>
       </defs>
 
       {/* faint console rings for depth */}
@@ -80,24 +83,40 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
         />
       ))}
 
-      {/* signal packets traveling each wire, staggered */}
-      {EDGES.map(([a, b], i) => (
-        <line
-          key={`pulse-${i}`}
-          x1={NODES[a].x}
-          y1={NODES[a].y}
-          x2={NODES[b].x}
-          y2={NODES[b].y}
-          stroke="var(--signal)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          pathLength={100}
-          strokeDasharray="5 95"
-          style={{
-            animation: `edge-travel 3.4s linear ${i * 0.55}s infinite`,
-          }}
-        />
-      ))}
+      {/* signal packets traveling each wire, staggered, with a soft glow trail */}
+      {EDGES.map(([a, b], i) => {
+        const anim = `edge-travel 3.4s linear ${i * 0.55}s infinite`;
+        return (
+          <g key={`pulse-${i}`}>
+            <line
+              x1={NODES[a].x}
+              y1={NODES[a].y}
+              x2={NODES[b].x}
+              y2={NODES[b].y}
+              stroke="var(--signal)"
+              strokeWidth={6}
+              strokeLinecap="round"
+              filter="url(#beam)"
+              opacity={0.5}
+              pathLength={100}
+              strokeDasharray="7 93"
+              style={{ animation: anim }}
+            />
+            <line
+              x1={NODES[a].x}
+              y1={NODES[a].y}
+              x2={NODES[b].x}
+              y2={NODES[b].y}
+              stroke="var(--signal)"
+              strokeWidth={2}
+              strokeLinecap="round"
+              pathLength={100}
+              strokeDasharray="5 95"
+              style={{ animation: anim }}
+            />
+          </g>
+        );
+      })}
 
       {/* nodes */}
       {NODES.map((n, i) => {
@@ -105,6 +124,21 @@ export function NetworkGraph({ className = "" }: { className?: string }) {
         return (
           <g key={i} style={{ animation: `node-breathe 4.5s ease-in-out ${i * 0.4}s infinite` }}>
             {isYou && <circle cx={n.x} cy={n.y} r={26} fill="url(#you-core)" filter="url(#soft)" />}
+            {(isYou || n.kind === "online") && (
+              <circle
+                cx={n.x}
+                cy={n.y}
+                r={isYou ? 10 : 7}
+                fill="none"
+                stroke={isYou ? "var(--signal)" : "var(--online)"}
+                strokeWidth={1.2}
+                style={{
+                  transformBox: "fill-box",
+                  transformOrigin: "center",
+                  animation: `node-ping 3.4s ease-out ${i * 0.5}s infinite`,
+                }}
+              />
+            )}
             <circle
               cx={n.x}
               cy={n.y}

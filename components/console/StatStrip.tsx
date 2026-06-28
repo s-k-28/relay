@@ -1,6 +1,7 @@
 "use client";
 
 import type { Stats } from "../types";
+import { NumberTicker } from "./NumberTicker";
 
 const ITEMS: { key: keyof Stats; label: string; signal?: boolean }[] = [
   { key: "totalRequests", label: "Questions relayed" },
@@ -19,13 +20,12 @@ export function StatStrip({ stats, loading }: { stats: Stats | null; loading: bo
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-faint">
               {it.label}
             </span>
-            <span
+            <NumberTicker
+              value={value}
               className={`font-mono text-[26px] font-medium tabular-nums leading-none transition-colors ${
                 it.signal ? "text-signal" : "text-ink"
               } ${loading && !stats ? "opacity-40" : ""}`}
-            >
-              {value}
-            </span>
+            />
           </div>
         );
       })}

@@ -212,7 +212,7 @@ function Bubble({ message, name, isLatest }: { message: ThreadMessage; name: str
 
   const human = message.role === "human";
   return (
-    <div className={`flex items-start gap-3 ${isLatest ? "anim-answer" : ""}`}>
+    <div className={`flex items-start gap-3 ${isLatest ? "anim-fade" : ""}`}>
       <Avatar name={name} size="sm" />
       <div className="max-w-[82%]">
         <div
@@ -220,7 +220,22 @@ function Bubble({ message, name, isLatest }: { message: ThreadMessage; name: str
             human ? "border-amber/35 bg-amber-deep/30 text-ink" : "border-line bg-raised text-ink"
           }`}
         >
-          {message.text}
+          {isLatest ? (
+            <span aria-label={message.text}>
+              {message.text.split(" ").map((w, i) => (
+                <span
+                  key={i}
+                  aria-hidden="true"
+                  className="mr-[0.26em] inline-block"
+                  style={{ animation: `word-rise 0.42s ease ${Math.min(i * 0.02, 0.7)}s both` }}
+                >
+                  {w}
+                </span>
+              ))}
+            </span>
+          ) : (
+            message.text
+          )}
         </div>
         <p className="mt-1 pl-1 font-mono text-[10px] text-ghost">
           {human ? `${name.split(" ")[0]} (human)` : `${name.split(" ")[0]}'s agent`} · {clock(message.ts)}
