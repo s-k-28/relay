@@ -18,11 +18,14 @@ import type {
 let client: Redis | null = null;
 function db(): Redis {
   if (!client) {
-    const url = process.env.KV_REST_API_URL;
-    const token = process.env.KV_REST_API_TOKEN;
+    // Accept either the Vercel KV naming or Upstash's native naming, since the
+    // Vercel marketplace integration injects one or the other depending on path.
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const token =
+      process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
     if (!url || !token) {
       throw new Error(
-        "Upstash not configured. Set KV_REST_API_URL and KV_REST_API_TOKEN.",
+        "Upstash not configured. Set KV_REST_API_URL and KV_REST_API_TOKEN (or the UPSTASH_REDIS_REST_* equivalents).",
       );
     }
     client = new Redis({ url, token });

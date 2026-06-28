@@ -1,26 +1,293 @@
 @import "tailwindcss";
 
+/*
+  Relay design system. A calm operator console.
+  One ink base, slate neutrals, a single signal accent.
+  Editorial serif for headlines, grotesque for the interface, mono for keys and numbers.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* base surfaces, near black with a faint cool tint, layered for depth */
+  --bg: #08090b;
+  --panel: #0d0f12;
+  --card: #121519;
+  --raised: #171b21;
+
+  /* hairline structure */
+  --line: #1d222a;
+  --line-strong: #2a313b;
+
+  /* ink, four steps of legibility */
+  --ink: #e9edf1;
+  --muted: #98a2ad;
+  --faint: #646d78;
+  --ghost: #3a4149;
+
+  /* one signal accent, used sparingly: live relay, primary action, focus */
+  --signal: #d4f25a;
+  --signal-dim: #b9d94c;
+  --signal-deep: #2c3410;
+
+  /* state colors */
+  --online: #4ec77a;
+  --amber: #f0b65e;
+  --amber-deep: #3a2c12;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-ghost: var(--ghost);
+  --color-signal: var(--signal);
+  --color-signal-dim: var(--signal-dim);
+  --color-signal-deep: var(--signal-deep);
+  --color-online: var(--online);
+  --color-amber: var(--amber);
+  --color-amber-deep: var(--amber-deep);
+
+  --font-serif: var(--font-eb), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-hk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jb), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-card: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-feature-settings: "ss01", "cv01";
+    /* faint atmosphere, two soft pools of light, nothing loud */
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(
+        60rem 40rem at 78% -10%,
+        rgba(212, 242, 90, 0.05),
+        transparent 60%
+      ),
+      radial-gradient(
+        50rem 40rem at 0% 8%,
+        rgba(120, 150, 200, 0.045),
+        transparent 55%
+      );
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(212, 242, 90, 0.22);
+    color: var(--ink);
+  }
+
+  /* visible, keyboard friendly focus everywhere */
+  :focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::placeholder {
+    color: var(--ghost);
+  }
+
+  /* quiet, console grade scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 3px solid var(--bg);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: #353d48;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* tracked, uppercase eyebrow label used across the console */
+  .eyebrow {
+    font-family: var(--font-jb), ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* fine grain overlay for premium texture, sits above the base, below content */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* hairline that fades, used for section rules and edges */
+  .rule-fade {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--line-strong) 18%,
+      var(--line-strong) 82%,
+      transparent
+    );
+  }
+
+  .card-grad {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 40%),
+      var(--card);
+  }
+
+  /* the live signal dot, soft breathing glow */
+  .pulse-dot {
+    box-shadow: 0 0 0 0 rgba(78, 199, 122, 0.5);
+    animation: pulse-ring 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+}
+
+/* motion, restrained. springs on arrival, soft fades, nothing bouncy. */
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(78, 199, 122, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(78, 199, 122, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(78, 199, 122, 0);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes answer-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.004);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes thinking {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* edge pulse, a packet of signal traveling a network line */
+@keyframes edge-travel {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+
+@keyframes node-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.anim-rise {
+  animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-answer {
+  animation: answer-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-fade {
+  animation: fade-in 0.5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
