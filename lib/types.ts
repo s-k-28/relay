@@ -103,6 +103,23 @@ export interface ShareResponse {
   agentUrl: string;
 }
 
+// GET /api/proof (public, no auth) -> self-reporting proof of real Aicoo usage.
+export interface ProofResponse {
+  product: string;
+  coreThesis: string;
+  aicooBaseUrl: string;
+  aicooEndpointsUsed: Array<{ endpoint: string; usage: string }>;
+  live: {
+    membersConnected: number;
+    requestsRelayed: number;
+    answeredByAgent: number;
+    escalated: number;
+    resolved: number;
+    interruptionsSaved: number;
+  };
+  note: string;
+}
+
 // GET /api/stats
 export interface StatsResponse {
   totalRequests: number;
