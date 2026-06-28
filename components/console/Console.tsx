@@ -2,24 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { api, ApiError, isBackendLive } from "../api";
 import type { Member, Stats, ThreadMessage } from "../types";
 import { Wordmark, SignalDot } from "../brand";
+import { getAccount, clearAccount } from "../auth/session";
 import { Avatar } from "./Avatar";
 import { AgentCard } from "./AgentCard";
-import { ConnectPanel } from "./ConnectPanel";
 import { Composer } from "./Composer";
 import { StatStrip } from "./StatStrip";
 
 export function Console() {
+  const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [meId, setMeId] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [ready, setReady] = useState(false);
   const [live, setLive] = useState(false);
-
-  const [connecting, setConnecting] = useState(false);
-  const [connectError, setConnectError] = useState<string | null>(null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [threads, setThreads] = useState<Record<string, ThreadMessage[]>>({});
@@ -42,28 +41,33 @@ export function Console() {
   }, []);
 
   useEffect(() => {
+    // Gate the console behind a sign in. No account, back to /login.
+    if (!getAccount()) {
+      router.replace("/login");
+      return;
+    }
     (async () => {
       try {
-        await loadNetwork();
+        const net = await loadNetwork();
+        // Signed in but not yet connected to Aicoo. Connecting now happens on /connect,
+        // so send them there rather than rendering an empty console.
+        if (!net.meId) {
+          router.replace("/connect");
+          return;
+        }
         await refreshStats();
-      } finally {
+        setReady(true);
+      } catch {
+        // Network call failed outright. Surface the console shell so the header and
+        // its sign out stay reachable rather than trapping the person on a spinner.
         setReady(true);
       }
     })();
-  }, [loadNetwork, refreshStats]);
+  }, [loadNetwork, refreshStats, router]);
 
-  async function handleConnect(name: string, role: string, aicooKey: string) {
-    setConnecting(true);
-    setConnectError(null);
-    try {
-      await api.connect(name, role, aicooKey);
-      await loadNetwork();
-      await refreshStats();
-    } catch (err) {
-      setConnectError(err instanceof ApiError ? err.code : "connect_failed");
-    } finally {
-      setConnecting(false);
-    }
+  function handleSignOut() {
+    clearAccount();
+    router.push("/");
   }
 
   async function handleSend(question: string) {
@@ -120,14 +124,9 @@ export function Console() {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <ConsoleHeader me={me} live={live} />
+      <ConsoleHeader me={me} live={live} onSignOut={handleSignOut} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        {!meId ? (
-          <div className="anim-rise py-6">
-            <ConnectPanel onConnect={handleConnect} submitting={connecting} error={connectError} />
-          </div>
-        ) : (
           <div className="anim-fade flex flex-col gap-6">
             <StatStrip stats={stats} loading={!stats} />
 
@@ -183,13 +182,20 @@ export function Console() {
               </section>
             </div>
           </div>
-        )}
       </main>
     </div>
   );
 }
 
-function ConsoleHeader({ me, live }: { me: Member | null; live: boolean }) {
+function ConsoleHeader({
+  me,
+  live,
+  onSignOut,
+}: {
+  me: Member | null;
+  live: boolean;
+  onSignOut: () => void;
+}) {
   return (
     <header className="sticky top-0 z-30 border-b border-line/70 bg-bg/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
@@ -217,6 +223,13 @@ function ConsoleHeader({ me, live }: { me: Member | null; live: boolean }) {
               <SignalDot online={me.online} className="ml-0.5" />
             </span>
           )}
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="rounded-full border border-line px-3.5 py-1.5 text-[12.5px] text-muted transition-colors hover:border-line-strong hover:text-ink"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>

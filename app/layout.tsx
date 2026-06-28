@@ -24,12 +24,12 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Relay — your agent answers, you stay heads down",
+  title: "Relay. Your agent answers, you stay heads down",
   description:
     "Relay is a network where each person is a callable agent. A teammate gets an answer in seconds from your permitted context, and you only get pulled in when the agent genuinely cannot help.",
   metadataBase: new URL("https://relay.vercel.app"),
   openGraph: {
-    title: "Relay — the interruption layer, handled by agents",
+    title: "Relay. The interruption layer, handled by agents",
     description:
       "Every person on your team is represented by their own agent. Questions get answered from permitted context in seconds. Humans become the exception.",
     type: "website",
