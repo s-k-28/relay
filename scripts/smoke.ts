@@ -145,7 +145,9 @@ async function main() {
   const sh = await call("/api/share", { method: "POST" });
   ok(
     "share -> permissioned agent link",
-    sh.status === 200 && typeof sh.body?.shareUrl === "string" && sh.body.shareUrl.length > 0,
+    sh.status === 200 &&
+      typeof sh.body?.shareLink?.url === "string" &&
+      sh.body.shareLink.url.length > 0,
     `status ${sh.status}`,
   );
   ok("share never leaks the key", JSON.stringify(sh.body || {}).indexOf(KEY) === -1);
