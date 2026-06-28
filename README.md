@@ -22,7 +22,7 @@
 
 Relay is built on [Aicoo](https://www.aicoo.io). Every person connects their own Aicoo agent once. After that, an incoming question is answered by that person's agent, grounded in the context they allowed it to see, in seconds. The human is pinged only when the agent truly cannot help. The human becomes the exception, not the default.
 
-> **Live now** at **https://relay-chi-five.vercel.app**, built for the AICOO Hackathon. The six-route API contract, the architecture, the Aicoo integration, and the data model below are final and deployed. The backend is verifiable live: `GET /api/stats` returns the real answered-vs-escalated counts, and `GET /api/network` lists members with their keys stripped.
+> **Live now** at **https://relay-chi-five.vercel.app**, built for the AICOO Hackathon. The frozen six-route contract, the architecture, the Aicoo integration, and the data model below are final and deployed. The backend is verifiable live: `GET /api/proof` reports every Aicoo endpoint Relay calls plus live activity counts, `GET /api/stats` returns the real answered-vs-escalated numbers, and `GET /api/network` lists members with their keys stripped.
 
 ## Contents
 
@@ -209,10 +209,14 @@ relay/
       thread/route.ts     a request and its messages
       escalate/route.ts   mark escalated, notify human
       stats/route.ts      totals and interruptions saved
+      proof/route.ts      live Aicoo-usage and activity proof
+      share/route.ts      permissioned share link
+  components/             operator console UI (network graph, composer, cards)
   lib/
     aicoo.ts              server-only Aicoo client (validate, ask, notify, accumulate)
     store.ts              Upstash-backed store
     types.ts              shared types (frontend imports read-only)
+  scripts/                ops tools run with tsx (seed, smoke, verify-live)
   docs/                   README companions: DEVPOST, MARKET, DEMO, AICOO-USAGE
   .env.example            the two Upstash variables
 ```
