@@ -6,6 +6,10 @@
 // Usage:
 //   BASE_URL=https://relay-chi-five.vercel.app AICOO_KEY=sk_... npx tsx scripts/smoke.ts
 
+// Module marker so this script has its own scope and does not collide with the
+// other scripts in the typecheck program.
+export {};
+
 const BASE = process.env.BASE_URL || "https://relay-chi-five.vercel.app";
 const KEY = process.env.AICOO_KEY || "";
 
