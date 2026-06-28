@@ -111,12 +111,46 @@ function extractText(data: unknown): string {
   return "";
 }
 
+// Parse a newline delimited event stream and join its text. The /chat endpoint
+// returns a single JSON object when stream is false, but this is a safe fallback
+// in case streaming events ever come back so we never surface raw event lines.
+function parseNdjson(raw: string): string {
+  const parts: string[] = [];
+  let sawEvent = false;
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    try {
+      const obj = JSON.parse(trimmed) as Record<string, unknown>;
+      sawEvent = true;
+      if (obj.type === "text-delta" && typeof obj.textDelta === "string") {
+        parts.push(obj.textDelta);
+      } else if (typeof obj.text === "string") {
+        parts.push(obj.text);
+      }
+    } catch {
+      // Not a JSON line, ignore it.
+    }
+  }
+  return sawEvent ? parts.join("").trim() : "";
+}
+
 // An empty reply, or one whose first word is the ESCALATE token, means the
 // agent could not answer from permitted context.
 function isEscalate(text: string): boolean {
   if (!text) return true;
   const firstWord = text.replace(/[`*_"'.,!?\s]+/g, " ").trim().toUpperCase().split(" ")[0];
   return firstWord === "ESCALATE";
+}
+
+// Slug a title into a safe file path segment for the Relay folder.
+function slug(title: string): string {
+  const base = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return base || "note";
 }
 
 // Ask a member's agent a question on that member's behalf. The agent answers
@@ -139,7 +173,15 @@ export async function askAgent(
     body: JSON.stringify({ message, stream: false }),
   });
 
-  const answer = extractText(data);
+  // A clean stream:false call returns one JSON object. If we ever get raw text
+  // or event lines instead, fall back to NDJSON parsing then to the raw string.
+  let answer: string;
+  if (typeof data === "string") {
+    answer = parseNdjson(data) || data.trim();
+  } else {
+    answer = extractText(data);
+  }
+
   const escalate = isEscalate(answer);
   return { answer: escalate ? "" : answer, escalate };
 }
@@ -151,7 +193,9 @@ export async function notifyHuman(key: string, summary: string): Promise<boolean
     await aicoo(key, "/tools", {
       method: "POST",
       body: JSON.stringify({
-        tool: "messaging.send_message_to_human",
+        // The execute body takes the bare tool name. namespace is a separate
+        // field in tool discovery, not part of the name passed here.
+        tool: "send_message_to_human",
         params: { message: summary },
       }),
     });
@@ -172,7 +216,9 @@ export async function accumulate(
     await aicoo(key, "/accumulate", {
       method: "POST",
       body: JSON.stringify({
-        texts: [{ title, content, folder: "Relay" }],
+        // Live /accumulate writes file paths, not loose texts. Land resolved
+        // Q and A as a markdown file inside the member's Relay folder.
+        files: [{ path: `Relay/${slug(title)}.md`, content }],
         folders: { create: ["Relay"] },
       }),
     });
