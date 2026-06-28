@@ -60,7 +60,7 @@ export function Footer() {
         </div>
         <div className="rule-fade mt-12 mb-6" />
         <p className="font-mono text-[11px] leading-relaxed text-faint">
-          Built on Aicoo for the AICOO Hackathon. Person to person agent routing.
+          Built on Aicoo. Person to person agent routing.
         </p>
       </div>
     </footer>
